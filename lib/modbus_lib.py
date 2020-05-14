@@ -168,22 +168,15 @@ def parse_args():
                         help='hostname of heat pump tcp ip')
     parser.add_argument('--port', type=int, required=False, default=64072,
                         help='port of heat pump tcp ip')
-    parser.add_argument('--user', type=str, required=False, default='eugene',
-                        help='user name')
-    parser.add_argument('--password', type=str, required=False, default='7vT4g#1@K',
-                        help='user password')
-    parser.add_argument('--database', type=str, required=False, default='uceeb',
-                        help='database name')
     return parser.parse_args()
 
 
-def main(host, port, user, password, database):
-    print()
+def main(host, port):
     m = ModbusClient(
         host, port, writer=InfluxClient(
-            host=host, port=port,
-            user=user, password=password,
-            dbname=database
+            host='localhost', port=8086,
+            user='eugene', password='7vT4g#1@K',
+            dbname='uceeb'
         )
     )
     m.start_reading()
