@@ -1,5 +1,7 @@
-from lib.influx.influx_lib import InfluxDataFrameReader, DataFrameProcessor
+from lib.influx.influx_lib import InfluxDataFrameReader
+from lib.data_proc import DataFrameProcessor
 import logging
+from datetime import datetime
 import pandas as pd
 import numpy as np
 
@@ -20,19 +22,23 @@ logger.addHandler(stream_handler)
 def main():
     host = 'localhost'
     port = 8086
-    dbname = 'home'
+    dbname = 'uceeb'
     username = 'eugene'
     password = '7vT4g#1@K'
+    interval = '10m'
 
     client = InfluxDataFrameReader(
         host=host, port=port,
         user=username, password=password,
         dbname=dbname
     )
-    df_pv = client.time_query('pv_measurement', '20h')
-    df_hp = client.time_query('hp_measurement', '20h')
+    df_pv = client.time_query('pv_measurement', interval)
+    df_hp = client.time_query('hp_measurement', interval)
+    df = DataFrameProcessor([
+        df_pv.loc[:, ['power']],
+        df_hp.loc[:, ['0_set_temp', '1_sens_on', '2_sens_off',
+                      '3_hp_on_off', '4_hysteresis_on', '5_hysteresis_off']]]).process()
     print()
-    # df_proc = DataFrameProcessor()
 
 
 if __name__ == '__main__':

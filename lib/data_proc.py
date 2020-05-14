@@ -10,8 +10,8 @@ logger.setLevel(logging.DEBUG)
 
 class DataFrameProcessor:
     def __init__(self, df_list, tz=pytz.timezone('Europe/Prague')):
-        self.df_list = df_list
         self.tz = tz
+        self.df_list = df_list
 
     @property
     def df_list(self):
