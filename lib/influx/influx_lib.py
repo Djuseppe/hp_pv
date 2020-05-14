@@ -129,7 +129,7 @@ class InfluxDataFrameReader:
     def time_query(self, measurement='outdoor_weather', time_shift='1h'):
         query = "SELECT * FROM {} WHERE time > now() - {} AND time < now()".format(measurement, time_shift)
         try:
-            result = self.client.query(query, database=self.dbname)
+            result = self.client.query(query, database=self.dbname).get(measurement)
         except influxdb.client.InfluxDBClientError as error:
             logger.error('Error while trying to query DB: {}'.format(error))
             result = None
