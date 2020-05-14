@@ -115,7 +115,7 @@ class InfluxDataFrameReader:
         self.verify_ssl = False
         # self.ssl = True if self.host != '127.0.0.1' else False
         # self.verify_ssl = True if self.host != '127.0.0.1' else False
-        self.client = InfluxDBClient(
+        self.client = DataFrameClient(
             host=self.host, port=self.port, database=self.dbname,
             username=self.user, password=self.password,
             ssl=self.ssl, verify_ssl=self.verify_ssl
@@ -198,9 +198,9 @@ def main():
     #     host=r'localhost', port=8086,
     #     dbname='home'
     # )
-    client = DataFrameClient(
+    client = InfluxDataFrameReader(
         host=r'localhost', port=8086,
-        database='home'
+        dbname='home'
     )
 
     tz_prague = pytz.timezone('Europe/Prague')
@@ -208,13 +208,15 @@ def main():
     time_format = '%Y-%m-%dT%H:%M:%S.%z'
     t = datetime.now(tz_prague).strftime(time_format)
     # res = client.read()
-    # res = client.time_query('hp_measurement', '1d')
-    query = "SELECT * FROM {} WHERE time > now() - {} AND time < now()".format('hp_measurement', '1d')
-    df = client.query(query, database='home')['hp_measurement']
-    pd_processor = DataFrameProcessor(df)
-    pd_processor.convert_tz()
-    print(type(df))
-    print(df)
+    result = client.time_query('hp_measurement', '1d').get('hp_measurement')
+    # query = "SELECT * FROM {} WHERE time > now() - {} AND time < now()".format('hp_measurement', '1d')
+    # result = client.query(query, database='home')
+    print(result)
+    # df = client.time_query(query).get(['hp_measurement'])
+    # pd_processor = DataFrameProcessor(df)
+    # pd_processor.convert_tz()
+    # print(type(df))
+    # print(df)
     # print(client.create_json(
     #     time_val=t,
     #     tags=dict(project='home', type='measurement'),
