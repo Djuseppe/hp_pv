@@ -121,6 +121,8 @@ class ModbusClient(ModbusInterface):
             elif k == '5_hysteresis_off' and res >= 1000:
                 res -= 2 ** 16
             reg_dict[k] = float(res)
+        reg_dict['4_hysteresis_on'] += reg_dict['0_set_temp']
+        reg_dict['5_hysteresis_off'] += reg_dict['0_set_temp']
         return reg_dict
         # reg_dict = {k: v for k, v in zip(keys, [int(reg_0 / 10), reg_1, reg_2, reg_3, reg_4, reg_5])}
 
