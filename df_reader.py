@@ -29,8 +29,8 @@ def main():
         user=username, password=password,
         dbname=dbname
     )
-    df_pv = client.time_query('pv_measurement', '1h')
-    df_hp = client.time_query('hp_measurement', '1h')
+    df_pv = client.time_query('pv_measurement', '20h')
+    df_hp = client.time_query('hp_measurement', '20h')
     print()
     # df_proc = DataFrameProcessor()
 

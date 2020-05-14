@@ -140,27 +140,6 @@ class InfluxDataFrameReader:
         return result
 
 
-class DataFrameProcessor:
-    def __init__(self, df=None, tz=pytz.timezone('Europe/Prague')):
-        self.df = df
-        self.tz = tz
-
-    @property
-    def df(self):
-        return self._df
-
-    @df.setter
-    def df(self, df):
-        if isinstance(df, pd.core.frame.DataFrame):
-            self._df = df
-        else:
-            self._df = None
-            logger.error('DF passed is not pd.DataFrame object.')
-
-    def convert_tz(self):
-        self.df.index = self.df.index.tz_convert(self.tz)
-
-
 # def main():
 #     tz_prague = pytz.timezone('Europe/Prague')
 #     time_format = '%Y-%m-%dT%H:%M:%S.%z'
