@@ -104,7 +104,8 @@ class InfluxDataFrameReader:
     def __init__(
         self, host='127.0.0.1', port=8086,
         user=None, password=None,
-        dbname='db0'
+        dbname='db0',
+        interval='10m'
     ):
         self.host = host
         self.port = port
@@ -113,6 +114,7 @@ class InfluxDataFrameReader:
         self.password = password
         self.ssl = False
         self.verify_ssl = False
+        self.interval = interval
         # self.ssl = True if self.host != '127.0.0.1' else False
         # self.verify_ssl = True if self.host != '127.0.0.1' else False
         self.client = DataFrameClient(
@@ -138,6 +140,19 @@ class InfluxDataFrameReader:
                 logger.error('Error while trying to query DB: {}'.format(error))
                 result = None
         return result
+
+    def read_results(self):
+        _df_pv = self.time_query('pv_measurement', self.interval)
+        _df_hp = self.time_query('hp_measurement', self.interval)
+        df_pv = _df_pv.loc[:, ['power']],
+        df_hp = _df_hp.loc[
+                :, ['0_set_temp', '1_sens_on', '2_sens_off',
+                    '3_hp_on_off', '4_hysteresis_on', '5_hysteresis_off']]
+        return df_pv, df_hp
+        # df = DataFrameProcessor([
+        #     df_pv.loc[:, ['power']],
+        #     df_hp.loc[:, ['0_set_temp', '1_sens_on', '2_sens_off',
+        #                   '3_hp_on_off', '4_hysteresis_on', '5_hysteresis_off']]]).process()
 
 
 # def main():
