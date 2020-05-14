@@ -20,11 +20,9 @@ logger.addHandler(stream_handler)
 def main():
     host = 'localhost'
     port = 8086
-    dbname = 'uceeb'
+    dbname = 'home'
     username = 'eugene'
     password = '7vT4g#1@K'
-    protocol = 'line'
-    measurement = 'pv_measurement'
 
     client = InfluxDataFrameReader(
         host=host, port=port,

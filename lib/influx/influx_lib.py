@@ -121,18 +121,22 @@ class InfluxDataFrameReader:
             ssl=self.ssl, verify_ssl=self.verify_ssl
         )
         try:
-            _ver = self.client.ping()
-            logger.info('Connected to DB {} version = {}'.format(self.dbname, _ver))
+            self._ver = self.client.ping()
+            logger.info('Connected to DB {} version = {}'.format(self.dbname, self._ver))
         except Exception as error:
+            self._ver = False
             logger.error('Connection error: {}'.format(error))
 
     def time_query(self, measurement='outdoor_weather', time_shift='1h'):
-        query = "SELECT * FROM {} WHERE time > now() - {} AND time < now()".format(measurement, time_shift)
-        try:
-            result = self.client.query(query, database=self.dbname).get(measurement)
-        except influxdb.client.InfluxDBClientError as error:
-            logger.error('Error while trying to query DB: {}'.format(error))
+        if not self._ver:
             result = None
+        else:
+            query = "SELECT * FROM {} WHERE time > now() - {} AND time < now()".format(measurement, time_shift)
+            try:
+                result = self.client.query(query, database=self.dbname).get(measurement)
+            except influxdb.client.InfluxDBClientError as error:
+                logger.error('Error while trying to query DB: {}'.format(error))
+                result = None
         return result
 
 
