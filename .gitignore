@@ -1,1 +1,4 @@
 /.idea
+/package
+*.log
+__pycache__
