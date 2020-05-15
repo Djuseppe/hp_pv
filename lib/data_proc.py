@@ -7,6 +7,7 @@ from datetime import datetime
 import json
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
+from lib.influx.influx_lib import InfluxDataFrameReader
 
 # logger config
 logging.basicConfig()
@@ -72,17 +73,25 @@ class FileWriter:
 
 
 def ctrl():
+    client = InfluxDataFrameReader(
+        host=r'localhost', port=8086,
+        user='eugene', password='7vT4g#1@K',
+        dbname='uceeb'
+    )
+
     f = FileWriter('scheduler_test.json')
-    # processor = DataFrameProcessor(None)
-    # df = processor.process()
-    size = 1
-    df = pd.DataFrame(data={
-        'a': np.random.rand(size),
-        'b': np.random.rand(size) * 10,
-        'c': np.random.rand(size) * 20
-    }, index=[datetime.now(tz=pytz.timezone('Europe/Prague')).strftime('%Y-%m-%d %H:%M:%S')])
+    df_pv, df_hp = client.read_results()
+    processor = DataFrameProcessor([df_pv, df_hp])
+    df = processor.process()
+    # size = 1
+    # df = pd.DataFrame(data={
+    #     'a': np.random.rand(size),
+    #     'b': np.random.rand(size) * 10,
+    #     'c': np.random.rand(size) * 20
+    # }, index=[datetime.now(tz=pytz.timezone('Europe/Prague')).strftime('%Y-%m-%d %H:%M:%S')])
     print()
-    f.write(df)
+
+    f.write(df.mean())
 
 
 def main():
@@ -100,4 +109,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    ctrl()
