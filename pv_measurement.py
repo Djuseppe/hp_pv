@@ -3,14 +3,14 @@ import pytz
 # import os
 from datetime import datetime
 from requests.exceptions import ConnectionError
-from lib.influx.influx_lib import InfluxClient
+from lib.influx.influx_lib import InfluxClient, InfluxDBServerError
 from lib.pv_lib import AnalogDeviceADS
 
 
 # set logger here
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-formatter = logging.FoKeyErrorrmatter('in module %(name)s, in func %(funcName)s, '
+formatter = logging.Formatter('in module %(name)s, in func %(funcName)s, '
                               '%(levelname)-8s: [%(filename)s:%(lineno)d] %(message)s')
 file_handler = logging.FileHandler('pv_measurement.log')
 file_handler.setLevel(logging.ERROR)
@@ -45,7 +45,7 @@ def main():
                     },
                     power=round(power, 2)
                 )
-            except ConnectionError as e:
+            except (ConnectionError, InfluxDBServerError) as e:
                 logger.error('Writing to DB error: {}'.format(e))
                 pass
             print('power = {:.1f} W,\nt = {}'.format(power, t))
