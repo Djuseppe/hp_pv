@@ -49,12 +49,15 @@ class Device(ABC):
 
 
 class AnalogDeviceADS(Device):
-    def __init__(self, interval=10, gain=1,
-                 coeff_current=3000/560, coeff_voltage=116.8059):
+    def __init__(
+            self, interval=10, gain=1,
+            time_format='%Y.%m.%d %H:%M:%S.%z',
+            tz_prague=pytz.timezone('Europe/Prague'),
+            coeff_current=3000/560, coeff_voltage=116.8059):
         self.gain = gain
         self.interval = interval
-        self.time_format = '%Y.%m.%d %H:%M:%S.%z'
-        self.tz_prague = pytz.timezone('Europe/Prague')
+        self.time_format = time_format
+        self.tz_prague = tz_prague
         self.coeff_current = coeff_current
         self.coeff_voltage = coeff_voltage
         try:
@@ -69,20 +72,21 @@ class AnalogDeviceADS(Device):
             self.status = False
 
     def measure(self):
-#         return self.ch_0.voltage, self.ch_3.voltage
         return self.ch_voltage.voltage * self.coeff_voltage, self.ch_current.voltage * self.coeff_current
 
     @wait
-    def make_measurement(
-            self, time_format='%Y.%m.%d %H:%M:%S.%z',
-            tz_prague=pytz.timezone('Europe/Prague')):
+    def make_measurement(self):
         time_vals = list()
-        analog_voltage = np.zeros(self.interval)
+        power_array = np.zeros(self.interval)
         for i in range(self.interval):
-            time_vals.append(datetime.now(tz_prague).strftime(time_format))
-            analog_voltage[i] = self.measure()
+            time_vals.append(datetime.now(self.tz_prague).strftime(self.time_format))
+            voltage, current = self.measure()
+            power_array[i] = voltage * current
             time.sleep(0.9)
-            return analog_voltage[~np.isnan(analog_voltage)].mean(), time_vals[-1]
+            if power_array.any():
+                return power_array[~np.isnan(power_array)].mean(), time_vals[-1]
+            else:
+                return np.NZERO, time_vals[-1]
 
 
 def main():
