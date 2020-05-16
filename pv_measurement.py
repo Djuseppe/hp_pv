@@ -3,8 +3,8 @@ import pytz
 # import os
 from datetime import datetime
 # from influxdb import ConnectionError
-from lib.influx_lib import InfluxClient
-from lib.meas_lib import AnalogDeviceADS
+from lib.influx.influx_lib import InfluxClient
+from lib.pv_lib import AnalogDeviceADS
 
 
 # set logger here
@@ -22,9 +22,6 @@ logger.addHandler(stream_handler)
 
 
 def main():
-    time_format = '%Y.%m.%d %H:%M:%S.%z'
-    tz_prague = pytz.timezone('Europe/Prague')
-    
     # power sensor init
     power_sensor = AnalogDeviceADS()
 
@@ -34,26 +31,27 @@ def main():
         user='eugene', password='7vT4g#1@K',
         dbname='uceeb'
     )
-    
-    try:
-        while True:
+    while True:
+        try:
             power, t = power_sensor.make_measurement()
-            
-            _write_res = client.write(
-                time_val=t,
-                measurement="pv_measurement",
-                tags={
-                    'project': "hp_pv",
-                    'type': "pv",
-                    'device': "curr_volt_transformer"
-                },
-                power=round(power, 2)
-            )
+            try:
+                _write_res = client.write(
+                    time_val=t,
+                    measurement="pv_measurement",
+                    tags={
+                        'project': "hp_pv",
+                        'type': "pv",
+                        'device': "curr_volt_transformer"
+                    },
+                    power=round(power, 2)
+                )
+            except KeyError as e:
+                logger.error('Writing to DB error: {}'.format(e))
             print('power = {:.1f},\nt = {}'.format(power, t))
             print('-' * 30)
-    except KeyboardInterrupt:
-        logger.info('Script was interrupted by user.')
-        pass
+        except KeyboardInterrupt:
+            logger.info('Script was interrupted by user.')
+            break
 
 
 if __name__ == '__main__':
