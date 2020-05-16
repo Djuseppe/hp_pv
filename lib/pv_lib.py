@@ -83,10 +83,10 @@ class AnalogDeviceADS(Device):
             voltage, current = self.measure()
             power_array[i] = voltage * current
             time.sleep(0.9)
-            if power_array.any():
-                return power_array[~np.isnan(power_array)].mean(), time_vals[-1]
-            else:
-                return np.NZERO, time_vals[-1]
+        if power_array.any():
+            return power_array[~np.isnan(power_array)].mean(), time_vals[-1]
+        else:
+            return np.NZERO, time_vals[-1]
 
 
 def main():
