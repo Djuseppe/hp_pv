@@ -18,12 +18,12 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('in module %(name)s, in func %(funcName)s, '
                               '%(levelname)-8s: [%(filename)s:%(lineno)d] %(message)s')
-file_handler = logging.FileHandler('meas_lib.log')
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(formatter)
+# file_handler = logging.FileHandler('meas_lib.log')
+# file_handler.setLevel(logging.INFO)
+# file_handler.setFormatter(formatter)
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
+# logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 
 
@@ -49,18 +49,21 @@ class Device(ABC):
 
 
 class AnalogDeviceADS(Device):
-    def __init__(self, interval=10, digital_io=board.D5, ch_num=MCP.P2, gain=1):
+    def __init__(self, interval=10, gain=1,
+                 coeff_current=3000/560, coeff_voltage=116.8059):
         self.gain = gain
         self.interval = interval
         self.time_format = '%Y.%m.%d %H:%M:%S.%z'
         self.tz_prague = pytz.timezone('Europe/Prague')
+        self.coeff_current = coeff_current
+        self.coeff_voltage = coeff_voltage
         try:
             self.i2c = busio.I2C(board.SCL, board.SDA)
             self.ads = ADS.ADS1115(self.i2c, address=0x48, gain=self.gain)
-            self.ch_0 = AnalogIn(self.ads, ADS.P0)
-            self.ch_1 = AnalogIn(self.ads, ADS.P1)
-            self.ch_2 = AnalogIn(self.ads, ADS.P2)
-            self.ch_3 = AnalogIn(self.ads, ADS.P3)
+            self.ch_current = AnalogIn(self.ads, ADS.P0)
+#             self.ch_1 = AnalogIn(self.ads, ADS.P1)
+#             self.ch_2 = AnalogIn(self.ads, ADS.P2)
+            self.ch_voltage = AnalogIn(self.ads, ADS.P3)
             # print('debug')
         except Exception as error:
             logger.error('Error while init: {}'.format(error))
@@ -68,7 +71,7 @@ class AnalogDeviceADS(Device):
 
     def measure(self):
         # return self.ch_0.voltage, self.ch_3.voltage, datetime.now(self.tz_prague).strftime(self.time_format)
-        return self.ch_0.voltage, self.ch_1.voltage, self.ch_2.voltage, self.ch_3.voltage
+        return self.ch_current.voltage * self.coeff_voltage, self.ch_current.voltage self.coeff_current
 
     @wait
     def make_measurement(
@@ -88,8 +91,8 @@ def main():
     try:
         while True:
             # ldr, t = energy_meter.make_measurement()
-            _meas = energy_meter.measure()
-            print(_meas)
+            voltage, current = energy_meter.measure()
+            print('voltage = {:.2f} V, current = {:.2f} A'.format(voltage, current))
             time.sleep(1)
             # print('-' * 30)
     except KeyboardInterrupt:
