@@ -61,17 +61,16 @@ class AnalogDeviceADS(Device):
             self.i2c = busio.I2C(board.SCL, board.SDA)
             self.ads = ADS.ADS1115(self.i2c, address=0x48, gain=self.gain)
             self.ch_current = AnalogIn(self.ads, ADS.P0)
-#             self.ch_1 = AnalogIn(self.ads, ADS.P1)
-#             self.ch_2 = AnalogIn(self.ads, ADS.P2)
             self.ch_voltage = AnalogIn(self.ads, ADS.P3)
+
             # print('debug')
         except Exception as error:
             logger.error('Error while init: {}'.format(error))
             self.status = False
 
     def measure(self):
-        # return self.ch_0.voltage, self.ch_3.voltage, datetime.now(self.tz_prague).strftime(self.time_format)
-        return self.ch_current.voltage * self.coeff_voltage, self.ch_current.voltage * self.coeff_current
+#         return self.ch_0.voltage, self.ch_3.voltage
+        return self.ch_voltage.voltage * self.coeff_voltage, self.ch_current.voltage * self.coeff_current
 
     @wait
     def make_measurement(
