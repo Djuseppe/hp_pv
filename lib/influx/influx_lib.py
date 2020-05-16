@@ -144,7 +144,8 @@ class InfluxDataFrameReader:
     def read_results(self):
         _df_pv = self.time_query('pv_measurement', self.interval)
         _df_hp = self.time_query('hp_measurement', self.interval)
-        df_pv = _df_pv.loc[:, ['power']],
+        df_pv = _df_pv.loc[:, ['power']]
+        df_pv.columns = ['pv_power']
         df_hp = _df_hp.loc[
                 :, ['0_set_temp', '1_sens_on', '2_sens_off',
                     '3_hp_on_off', '4_hysteresis_on', '5_hysteresis_off']]
@@ -187,58 +188,6 @@ def main():
     # query = "SELECT * FROM {} WHERE time > now() - {} AND time < now()".format('hp_measurement', '1d')
     # result = client.query(query, database='home')
     print(result)
-    # df = client.time_query(query).get(['hp_measurement'])
-    # pd_processor = DataFrameProcessor(df)
-    # pd_processor.convert_tz()
-    # print(type(df))
-    # print(df)
-    # print(client.create_json(
-    #     time_val=t,
-    #     tags=dict(project='home', type='measurement'),
-    #     fields=dict(temperature=55, humidity=77)
-    # ))
-    # print(type(d), '\n', d)
-    # client.client.create_database('testing_2')
-    # print(client.client.get_list_database())
-    # client.write(
-    #     time_val=t,
-    #     db_name='outdoor_weather',
-    #     tags=dict(project='new_project', type='measurement'),
-    #     fields=dict(temperature=30.5, humidity=66.8)
-    # )
-
-    # res = client.query("select * from {}".format('outdoor_weather'), database='home')
-    # print(res['outdoor_weather'])
-    # print(client.query('outdoor_weather'))
-    # print(client.read())
-    # rs = client.time_query(time_shift='3h')
-    # points = list(rs.get_points(measurement='cpu', tags={'host_name': 'influxdb.com'}))
-    # points = list(rs.get_points(measurement='outdoor_weather'))
-    # print(points[0]['time'], '\t'*2, points[0]['temperature'], '\t'*2, points[0]['humidity'])
-    # query = 'SELECT * FROM "outdoor_weather" WHERE time >= {} AND time <= {} GROUP BY time({})'.\
-    #     format(
-    #         datetime(2019, 4, 19, 5, tzinfo=tz_prague).strftime(time_format),
-    #         datetime(2019, 4, 19, 6, tzinfo=tz_prague).strftime(time_format),
-    #         '10m')
-    #
-    # query = 'SELECT * FROM "outdoor_weather" WHERE time >= {} AND time <= {}'.\
-    #     format(
-    #         datetime(2019, 4, 19, 5, tzinfo=tz_prague).strftime(time_format),
-    #         datetime(2019, 4, 19, 6, tzinfo=tz_prague).strftime(time_format))
-    # client.write(time_val=t, temperature=float(150), humidity=float(-20))
-    # print(client.read())
-
-    # query = 'SELECT * FROM "outdoor_weather" WHERE time >= {}'.\
-    #     format('2019-04-19T05:00:00Z')
-    # # '2015-08-18T00:00:00Z'
-    # print(query)
-    # # COUNT("temperature")
-    # try:
-    #     rs = client.client.query(query=query)
-    # except InfluxDBClientError as error:
-    #     logger.error('Infludb query error: {}'.format(error))
-    #     rs = None
-    # print(rs)
 
 
 if __name__ == '__main__':
