@@ -149,31 +149,8 @@ class InfluxDataFrameReader:
                 :, ['0_set_temp', '1_sens_on', '2_sens_off',
                     '3_hp_on_off', '4_hysteresis_on', '5_hysteresis_off']]
         return df_pv, df_hp
-        # df = DataFrameProcessor([
-        #     df_pv.loc[:, ['power']],
-        #     df_hp.loc[:, ['0_set_temp', '1_sens_on', '2_sens_off',
-        #                   '3_hp_on_off', '4_hysteresis_on', '5_hysteresis_off']]]).process()
 
 
-# def main():
-#     tz_prague = pytz.timezone('Europe/Prague')
-#     time_format = '%Y-%m-%dT%H:%M:%S.%z'
-#     client = InfluxClient()
-#     t = datetime.now(tz_prague).strftime(time_format)
-#     # print(client.create_json(
-#     #     time_val=t, temperature=30.1, humidity=66.4
-#     # ))
-#     # print(client.write(
-#     #     time_val=t, temperature=30.1, humidity=66.4
-#     # ))
-#     # print(client.read())
-#     # print(client.get_meas_list())
-#     # print(client.get_meas_list())
-#     # client.write(
-#     #     time_val=t, temperature=30.5, humidity=66.8
-#     # )
-#     print(client.time_query(time_shift='1h'))
-#     print()
 def main():
     # client = InfluxClient(
     #     host=r'vpn.feramat.com', port=8086,
