@@ -71,7 +71,7 @@ class AnalogDeviceADS(Device):
 
     def measure(self):
         # return self.ch_0.voltage, self.ch_3.voltage, datetime.now(self.tz_prague).strftime(self.time_format)
-        return self.ch_current.voltage * self.coeff_voltage, self.ch_current.voltage self.coeff_current
+        return self.ch_current.voltage * self.coeff_voltage, self.ch_current.voltage * self.coeff_current
 
     @wait
     def make_measurement(
