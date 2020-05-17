@@ -6,6 +6,8 @@ import pytz
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from lib.influx.influx_lib import InfluxDBServerError, InfluxClient
+from requests.exceptions import ConnectionError
 
 import board
 import busio
@@ -54,7 +56,10 @@ class Decorators(object):
 
 
 class TemperatureMeasurementDevice:
-    def __init__(self, interval=10, time_format='%Y.%m.%d %H:%M:%S.%z', tz_prague=pytz.timezone('Europe/Prague')):
+    def __init__(
+            self, interval=10, writer=None,
+            time_format='%Y.%m.%d %H:%M:%S.%z', tz_prague=pytz.timezone('Europe/Prague')):
+        self.writer = writer
         self.interval = interval
         self.time_format = time_format
         self.tz_prague = tz_prague
@@ -111,6 +116,22 @@ class TemperatureMeasurementDevice:
         for therm in self.thermocouple_list:
             result.append(therm.temperature)
         return np.array(result)
+
+    def write_to_db(self, data=None):
+        tags_dict = {
+            'project': "hp_pv",
+            'type': "hp",
+            'device': "rpi42"
+        }
+        try:
+            self.writer.write(
+                datetime.now(self.tz_prague).strftime(self.time_format),
+                tags_dict,
+                'temperatures',
+                **data
+            )
+        except (ConnectionError, InfluxDBServerError) as e:
+            logger.error('{}'.format(e))
 
     @Decorators.wait
     def make_measurement(self):

@@ -201,9 +201,6 @@ class ModbusClient(ModbusInterface):
         except (ConnectionError, InfluxDBServerError) as e:
             logger.error('{}'.format(e))
 
-    def __del__(self):
-        self.client.close()
-
     def start_reading(self):
         while True:
             try:
