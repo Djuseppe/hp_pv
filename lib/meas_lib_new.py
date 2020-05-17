@@ -8,6 +8,7 @@ import pandas as pd
 from datetime import datetime
 from lib.influx.influx_lib import InfluxDBServerError, InfluxClient
 from requests.exceptions import ConnectionError
+import argparse
 
 import board
 import busio
@@ -143,19 +144,40 @@ class TemperatureMeasurementDevice:
             time_vals.append(datetime.now(self.tz_prague).strftime(self.time_format))
             df.loc[ind, :] = self.measure()
             time.sleep(0.9)
-        return df.mean(axis=1), time_vals[-1]
+        return df.mean(axis=1).round(2).to_dict()
 
 
-def main():
-    m = TemperatureMeasurementDevice()
+def parse_args():
+    """Parse the args from main."""
+    parser = argparse.ArgumentParser(
+        description='example code to play with InfluxDB')
+    parser.add_argument('--host', type=str, required=False,
+                        default='10.208.8.93',
+                        help='hostname of influx db')
+    parser.add_argument('--port', type=int, required=False, default=8086,
+                        help='port of influx db')
+    return parser.parse_args()
+
+
+def main(host, port):
+    m = TemperatureMeasurementDevice(
+        writer=InfluxClient(
+            host=host, port=port,
+            user='eugene', password='7vT4g#1@K',
+            dbname='uceeb'
+        )
+    )
 #
     while True:
         try:
-            print(m.make_measurement(), end='')
+            res = m.make_measurement()
+            print(res, end='')
+            m.write_to_db(res)
         except KeyboardInterrupt:
             print('Interrupted by user.')
             break
 
 
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+    main(host=args.host, port=args.port)
