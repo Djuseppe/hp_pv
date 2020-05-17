@@ -144,7 +144,7 @@ class TemperatureMeasurementDevice:
             time_vals.append(datetime.now(self.tz_prague).strftime(self.time_format))
             df.loc[ind, :] = self.measure()
             time.sleep(0.9)
-        return df.mean(axis=1).round(2).to_dict()
+        return df.mean().round(2).to_dict()
 
 
 def parse_args():
