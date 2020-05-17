@@ -8,7 +8,10 @@ import logging
 import argparse
 from pymodbus.client.sync import ModbusTcpClient
 from pymodbus.exceptions import ConnectionException, ModbusIOException
-from lib.influx.influx_lib import InfluxClient
+from pymodbus.constants import Endian
+from pymodbus.payload import BinaryPayloadBuilder
+from lib.influx.influx_lib import InfluxDBServerError, InfluxClient
+from requests.exceptions import ConnectionError
 
 # import modbus_lib as mdb
 
@@ -50,7 +53,6 @@ class Decorators(object):
                 logger.error('Failed to connect to host {} at port {}'.format(args[0].host, args[0].port))
                 res = None
             return res
-
         return wrapped
 
     @classmethod
@@ -64,7 +66,6 @@ class Decorators(object):
             if stop - start < interval:
                 time.sleep(interval - (stop - start))
             return res
-
         return wrapped
 
 
@@ -90,6 +91,16 @@ class ModbusClient(ModbusInterface):
         ]
         self.client, self.conn_status = self.client_init()
 
+    def connect(self):
+        try:
+            self.conn_status = self.client.connect()
+        except ConnectionException as error:
+            logger.error('Failed to connect to host {} at port {}: {}'.format(self.host, self.port, error))
+
+    def disconnect(self):
+        self.client.close()
+        self.conn_status = False
+
     def client_init(self):
         try:
             client = ModbusTcpClient(self.host, self.port)
@@ -101,14 +112,34 @@ class ModbusClient(ModbusInterface):
         return client, conn_status
 
     def _read_one_register(self, reg_num):
+        # if self.conn_status:
+        #     pass
+        # else:
+        #     self.connect()
+            # self.conn_status = True
         try:
             register_read = self.client.read_holding_registers(reg_num).registers[0]
         except ModbusIOException as error:
             register_read = np.NZERO
             logger.info('Error when reading register num = {}: {}'.format(reg_num, error))
+        # self.disconnect()
         return register_read
 
-    @Decorators.wait
+    @staticmethod
+    def _build_payload(value):
+        builder = BinaryPayloadBuilder(
+            byteorder=Endian.Big,
+            wordorder=Endian.Little
+        )
+        # builder.add_32bit_float(value)
+        builder.add_32bit_int(value)
+        payload = builder.to_registers()[0]
+        return payload
+
+    def _write_one_register(self, reg_num, value):
+        payload = self._build_payload(value)
+        self.client.write_register(reg_num, payload, skip_encode=False)
+
     @Decorators.status_check
     def read_registers(self):
         reg_dict = dict()
@@ -121,13 +152,57 @@ class ModbusClient(ModbusInterface):
             elif k == '5_hysteresis_off' and res >= 1000:
                 res -= 2 ** 16
             reg_dict[k] = float(res)
-        reg_dict['4_hysteresis_on'] += reg_dict['0_set_temp']
-        reg_dict['5_hysteresis_off'] += reg_dict['0_set_temp']
         return reg_dict
         # reg_dict = {k: v for k, v in zip(keys, [int(reg_0 / 10), reg_1, reg_2, reg_3, reg_4, reg_5])}
 
+    def set_upper_temperature(self, temp):
+        temp *= 10
+        self._write_one_register(0, temp)
+        self._write_one_register(1, 0)
+        self._write_one_register(2, 0)
+
+    def set_bottom_temperature(self, temp):
+        temp *= 10
+        self._write_one_register(0, temp)
+        self._write_one_register(1, 7)
+        self._write_one_register(2, 7)
+
+    def set_hysteresis(self, value):
+        half_hyster = value / 2
+        _half_hyster = half_hyster if isinstance(half_hyster, int) else int(half_hyster)
+        self._write_one_register(4, -_half_hyster)
+        self._write_one_register(5, _half_hyster)
+
+    def start_hp(self):
+        self._write_one_register(3, 1)
+
+    def stop_hp(self):
+        self._write_one_register(3, 0)
+
+    # @Decorators.wait
     def _create_nan_dict(self):
         return {k: np.NZERO for k in self.keys}
+
+    def write_to_db(self):
+        _res = self.read_registers()
+        res = _res if _res is not None else self._create_nan_dict()
+        tags_dict = {
+            'project': "hp_pv",
+            'type': "hp",
+            'device': "rpi44"
+        }
+        try:
+            self.writer.write(
+                datetime.now(self.tz_prague).strftime(self.time_format),
+                tags_dict,
+                'hp_measurement',
+                **res
+            )
+        except (ConnectionError, InfluxDBServerError) as e:
+            logger.error('{}'.format(e))
+
+    def __del__(self):
+        self.client.close()
 
     def start_reading(self):
         while True:
@@ -178,10 +253,14 @@ def main(host, port):
         host, port, writer=InfluxClient(
             host='localhost', port=8086,
             user='eugene', password='7vT4g#1@K',
-            dbname='uceeb'
+            dbname='home'
         )
     )
-    m.start_reading()
+    # m = ModbusClient(host, port, )
+    # m._write_one_register(0, 20)
+    m.write_to_db()
+    res = m.read_registers()
+    print(res)
 
 
 if __name__ == '__main__':
