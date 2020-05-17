@@ -21,12 +21,12 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('in module %(name)s, in func %(funcName)s, '
                               '%(levelname)-8s: [%(filename)s:%(lineno)d] %(message)s')
-# file_handler = logging.FileHandler('meas_lib_new.log')
-# file_handler.setLevel(logging.INFO)
-# file_handler.setFormatter(formatter)
+file_handler = logging.FileHandler('meas_lib_new.log')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
-# logger.addHandler(file_handler)
+logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 
 
