@@ -9,10 +9,7 @@ spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
 
 # allocate a CS pin and set the direction
 cs1 = digitalio.DigitalInOut(board.D20)
-# cs1.direction = digitalio.Direction.OUTPUT
-
 cs2 = digitalio.DigitalInOut(board.D21)
-# cs2.direction = digitalio.Direction.OUTPUT
 cs3 = digitalio.DigitalInOut(board.D12)
 cs4 = digitalio.DigitalInOut(board.D25)
 cs5 = digitalio.DigitalInOut(board.D26)
