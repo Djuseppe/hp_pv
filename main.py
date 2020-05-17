@@ -25,7 +25,7 @@ def ctrl(host='147.32.99.72', port=64072):
         host, port, writer=InfluxClient(
             host='localhost', port=8086,
             user='eugene', password='7vT4g#1@K',
-            dbname='home'
+            dbname='uceeb'
         )
     )
     res = m.read_registers()
