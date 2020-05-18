@@ -14,7 +14,7 @@ def main(host, port):
     while True:
         try:
             res = m.make_measurement()
-            print(res, end='')
+            print(res)
             m.write_to_db(res)
         except KeyboardInterrupt:
             print('Interrupted by user.')
