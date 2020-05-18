@@ -29,6 +29,7 @@ def ctrl(host='147.32.99.72', port=64072):
         )
     )
     res = m.read_registers()
+    m.write_to_db()
     print(res)
     m.client.close()
 
