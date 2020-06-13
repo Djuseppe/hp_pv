@@ -57,6 +57,12 @@ def start_hp():
     hp.client.close()
 
 
+def stop_hp():
+    hp = ModbusClient()
+    hp.stop_hp()
+    hp.client.close()
+
+
 def main():
     t_top, t_bot = 45, 45
 
@@ -74,4 +80,5 @@ def main():
 
 if __name__ == '__main__':
     # start_hp()
-    main()
+    stop_hp()
+    # main()
