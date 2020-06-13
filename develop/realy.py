@@ -45,6 +45,7 @@ class Pump:
 if __name__ == '__main__':
     pump = Pump()
     pump.turn_on()
+
     
     # try:
     #     motor_on(channel)
