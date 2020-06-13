@@ -33,16 +33,16 @@ while True:
     current = ch_0.voltage * coeff_0
     voltage = ch_3.voltage * coeff_3
     power = current * voltage
-    
-    print(
-        """ch_0 = {:.2f}\tch_1 = {:.2f}\tch_2 = {:.2f}\tch_3 = {:.2f}\t
-    power = {:.2f}"""
-    .format(
-        ch_0.voltage,
-        ch_1.voltage * coeff_1,
-        ch_2.voltage * coeff_2,
-        ch_3.voltage * coeff_3,
-        power
-        )
-    )
+    print('power = {:.2f}'.format(power))
+    # print(
+    #     """ch_0 = {:.2f}\tch_1 = {:.2f}\tch_2 = {:.2f}\tch_3 = {:.2f}\t
+    # power = {:.2f}"""
+    # .format(
+    #     ch_0.voltage,
+    #     ch_1.voltage * coeff_1,
+    #     ch_2.voltage * coeff_2,
+    #     ch_3.voltage * coeff_3,
+    #     power
+    #     )
+    # )
     time.sleep(1)
