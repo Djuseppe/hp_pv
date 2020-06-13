@@ -20,12 +20,12 @@ logger.addHandler(stream_handler)
 
 
 def main():
-    host = 'localhost'
+    host = '10.208.8.93'  # 'localhost'
     port = 8086
     dbname = 'uceeb'
     username = 'eugene'
     password = '7vT4g#1@K'
-    interval = '10m'
+    interval = '5m'
 
     client = InfluxDataFrameReader(
         host=host, port=port,

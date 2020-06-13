@@ -2,7 +2,7 @@ import time
 import os
 import argparse
 from lib.modbus_lib import ModbusClient
-from lib.influx.influx_lib import InfluxClient
+from lib.influx.influx_lib import InfluxClient, DBReader
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
@@ -33,7 +33,7 @@ def ctrl(host='147.32.99.72', port=64072):
     m.client.close()
 
 
-def main(host, port, interval):
+def main_old(host, port, interval):
     scheduler = BackgroundScheduler()
     scheduler.add_job(ctrl, 'interval', seconds=interval, args=(
         host, port
@@ -51,6 +51,27 @@ def main(host, port, interval):
         scheduler.shutdown()
 
 
+def start_hp():
+    hp = ModbusClient()
+    hp.start_hp()
+    hp.client.close()
+
+
+def main():
+    t_top, t_bot = 45, 45
+
+    db = DBReader()
+    hp = ModbusClient()
+    pv_power, res = db.get_data_from_db()
+    if pv_power >= 1e3:
+        hp.set_bottom_temperature(t_bot)
+    else:
+        hp.set_upper_temperature(t_top)
+    hp.client.close()
+
+    print()
+
+
 if __name__ == '__main__':
-    args = parse_args()
-    main(args.host, args.port, args.interval)
+    # start_hp()
+    main()
