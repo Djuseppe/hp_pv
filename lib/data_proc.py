@@ -39,7 +39,8 @@ class DataFrameProcessor:
             d = pd.concat(self.df_list, axis=1)
         else:
             d = None
-        return d
+        df = d[~d.isna()]
+        return df
 
 
 class FileWriter:
@@ -73,25 +74,28 @@ class FileWriter:
 
 
 def ctrl():
-    client = InfluxDataFrameReader(
-        host=r'localhost', port=8086,
-        user='eugene', password='7vT4g#1@K',
-        dbname='uceeb'
-    )
+    host = '10.208.8.93'  # 'localhost'
+    port = 8086
+    dbname = 'uceeb'
+    username = 'eugene'
+    password = '7vT4g#1@K'
+    interval = '5m'
 
-    f = FileWriter('scheduler_test.json')
-    df_pv, df_hp = client.read_results()
-    processor = DataFrameProcessor([df_pv, df_hp])
-    df = processor.process()
-    # size = 1
-    # df = pd.DataFrame(data={
-    #     'a': np.random.rand(size),
-    #     'b': np.random.rand(size) * 10,
-    #     'c': np.random.rand(size) * 20
-    # }, index=[datetime.now(tz=pytz.timezone('Europe/Prague')).strftime('%Y-%m-%d %H:%M:%S')])
+    client = InfluxDataFrameReader(
+        host=host, port=port,
+        user=username, password=password,
+        dbname=dbname
+    )
+    df_pv = client.time_query('pv_measurement', interval)
+    df_hp = client.time_query('hp_measurement', interval)
+    df = DataFrameProcessor([
+        df_pv.loc[:, ['power']],
+        df_hp.loc[:, ['0_set_temp', '1_sens_on', '2_sens_off',
+                      '3_hp_on_off', '4_hysteresis_on', '5_hysteresis_off']]]).process()
     print()
 
-    f.write(df.mean())
+    if df.power >= 1000:
+        pass
 
 
 def main():

@@ -2,6 +2,7 @@ from abc import ABC
 from datetime import datetime
 import pytz
 import logging
+import pandas as pd
 import influxdb
 from influxdb import InfluxDBClient, DataFrameClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
@@ -18,6 +19,33 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
+
+
+class DataFrameProcessor:
+    def __init__(self, df_list, tz=pytz.timezone('Europe/Prague')):
+        self.tz = tz
+        self.df_list = df_list
+
+    @property
+    def df_list(self):
+        return self._df_list
+
+    @df_list.setter
+    def df_list(self, df_list):
+        self._df_list = list()
+        # self._df_list = [df for df in df_list if isinstance(df, pd.core.frame.DataFrame)]
+        for df in df_list:
+            if isinstance(df, pd.core.frame.DataFrame):
+                df.index = df.index.tz_convert(self.tz)
+                df_resampled = df.resample('1min').mean()
+                self._df_list.append(df_resampled)
+
+    def process(self):
+        if self.df_list:
+            d = pd.concat(self.df_list, axis=1)
+        else:
+            d = None
+        return d
 
 
 class InfluxInterface(ABC):
@@ -148,6 +176,24 @@ class InfluxDataFrameReader:
                 :, ['0_set_temp', '1_sens_on', '2_sens_off',
                     '3_hp_on_off', '4_hysteresis_on', '5_hysteresis_off']]
         return df_pv, df_hp
+
+
+class DBReader(InfluxDataFrameReader):
+    def __init__(
+            self, host='10.208.8.93', port=8086,
+            dbname='uceeb', username='eugene', password='7vT4g#1@K',
+            interval='10m'):
+        super().__init__(host, port, username, password, dbname)
+        self.interval = interval
+
+    def get_data_from_db(self):
+        df_pv = self.time_query('pv_measurement', self.interval)
+        df_hp = self.time_query('hp_measurement', self.interval)
+        df = DataFrameProcessor([
+            df_pv.loc[:, ['power']],
+            df_hp.loc[:, ['0_set_temp', '1_sens_on', '2_sens_off',
+                          '3_hp_on_off', '4_hysteresis_on', '5_hysteresis_off']]]).process()
+        return df.power.mean(), df.iloc[:-1, :]
 
 
 def main():
