@@ -56,16 +56,15 @@ class AnalogDeviceMPC(Device):
         self.time_format = time_format
         self.tz_prague = tz_prague
         self.coeff_u = coeff_u
-        self.scoff_i = coeff_i
+        self.coeff_i = coeff_i
         try:
             self.spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
             self.cs = digitalio.DigitalInOut(board.D21)
             mcp = MCP.MCP3008(self.spi, self.cs)
 
-            ch_u = AnalogIn(mcp, MCP.P6)
-            ch_i = AnalogIn(mcp, MCP.P7)
+            self.ch_u = AnalogIn(mcp, MCP.P6)
+            self.ch_i = AnalogIn(mcp, MCP.P7)
 
-            # print('debug')
         except Exception as error:
             logger.error('Error while init: {}'.format(error))
             self.status = False
