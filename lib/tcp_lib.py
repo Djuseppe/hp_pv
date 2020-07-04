@@ -81,7 +81,7 @@ class Client:
 
 
 def main():
-    s = Server()
+    s = Server('10.208.8.106')
     try:
         while True:
             conn, addr = s.socket.accept()
@@ -92,9 +92,9 @@ def main():
                     break
                 print(f'data received: {data}')
                 if data == bytes('on', 'utf-8'):
-                    print('get it, pump on!')
+                    print('get it, pump is on!')
                 elif data == bytes('off', 'utf-8'):
-                    print('get it, pump off!')
+                    print('get it, pump is off!')
                 else:
                     logger.debug(f'Command to rp42n was not understood: {data}')
 
@@ -113,6 +113,6 @@ def send_data(data):
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    send_data(args.data)
-    # main()
+    # args = parse_args()
+    # send_data(args.data)
+    main()

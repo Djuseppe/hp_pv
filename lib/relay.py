@@ -25,23 +25,38 @@ class Decorators(object):
 
 class Pump:
     def __init__(self, channel=12, auto_turn_off=5):
+        # GPIO.cleanup()
         self.channel = channel
         self.turn_off_time = auto_turn_off
+        self.gpio_set()
 
     def gpio_set(self):
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.channel, GPIO.OUT)
 
+    def gpio_clean(self):
+        GPIO.cleanup()
+
     @Decorators.cleaning_up
     def turn_off(self):
-        self.gpio_set()
+        # self.gpio_set()
         GPIO.output(self.channel, GPIO.HIGH)
 
     @Decorators.cleaning_up
     def turn_on(self):
-        self.gpio_set()
+        # self.gpio_set()
         GPIO.output(self.channel, GPIO.LOW)
-        time.sleep(self.turn_off_time)
+        # time.sleep(self.turn_off_time)
+
+    # def __del__(self):
+    #     GPIO.cleanup()
+
+
+def gpio_clean():
+    channel = 12
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(channel, GPIO.OUT)
+    GPIO.cleanup()
 
 
 def parse_args():
@@ -54,6 +69,9 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    pump = Pump(auto_turn_off=args.time)
-    pump.turn_on()
+    arguments = parse_args()
+    pump = Pump(auto_turn_off=arguments.time)
+    # pump.gpio_set()
+    pump.turn_off()
+    # GPIO.cleanup()
+
