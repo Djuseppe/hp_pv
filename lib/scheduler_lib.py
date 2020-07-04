@@ -1,9 +1,22 @@
 from datetime import datetime
 import time
+import logging
 import os
 import numpy as np
 import time
 from apscheduler.schedulers.background import BackgroundScheduler
+
+
+# set logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('in module %(name)s, in func %(funcName)s, '
+                              '%(levelname)-8s: [%(filename)s:%(lineno)d] %(message)s')
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+if not len(logger.handlers):
+    logger.addHandler(stream_handler)
+    logger.propagate = False
 
 
 class Controller:

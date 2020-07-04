@@ -10,7 +10,9 @@ formatter = logging.Formatter('in module %(name)s, in func %(funcName)s, '
                               '%(levelname)-8s: [%(filename)s:%(lineno)d] %(message)s')
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
+if not len(logger.handlers):
+    logger.addHandler(stream_handler)
+    logger.propagate = False
 
 
 def parse_args():

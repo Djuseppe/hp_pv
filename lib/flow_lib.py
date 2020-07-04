@@ -22,7 +22,9 @@ formatter = logging.Formatter('in module %(name)s, in func %(funcName)s, '
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 # logger.addHandler(file_handler)
-logger.addHandler(stream_handler)
+if not len(logger.handlers):
+    logger.addHandler(stream_handler)
+    logger.propagate = False
 
 
 def wait(func):
