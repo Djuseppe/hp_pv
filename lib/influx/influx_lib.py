@@ -121,7 +121,17 @@ class InfluxClient(InfluxInterface):
         return result
 
     def time_query(self, measurement='outdoor_weather', time_shift='1h'):
-        query = "SELECT * FROM {} WHERE time > now() - {} AND time < now()".format(measurement, time_shift)
+        query = "SELECT * FROM {} WHERE time > now() - {} AND time < now()".format(measurement, time_shift) # fill(null)
+        try:
+            result = self.client.query(query, database=self.dbname)
+        except influxdb.client.InfluxDBClientError as error:
+            logger.error('Error while trying to query DB: {}'.format(error))
+            result = None
+        return result
+
+    def get_last_value(self, measurement='hp_el_power', field='hp_el_power', t='10s'):
+        # SELECT last("hp_el_power") FROM "hp_el_power" WHERE $timeFilter GROUP BY time(10s) fill(null)
+        query = f'SELECT last({field}) FROM {measurement} GROUP BY time({t}) fill(null)'
         try:
             result = self.client.query(query, database=self.dbname)
         except influxdb.client.InfluxDBClientError as error:

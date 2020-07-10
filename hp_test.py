@@ -7,7 +7,6 @@ from lib.influx.influx_lib import InfluxClient, DBReader
 from apscheduler.schedulers.background import BackgroundScheduler
 from lib.tcp_lib import Client
 
-
 # set logger here
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -63,7 +62,7 @@ def main_old(host, port, interval):
         # This is here to simulate application activity (which keeps the main thread alive).
         while True:
             print('Still working at time = {:.2f} hour after start'.format((time.time() - start) / 3600))
-            time.sleep(5*60)
+            time.sleep(5 * 60)
     except (KeyboardInterrupt, SystemExit):
         # Not strictly necessary if daemonic mode is enabled but should be done if possible
         scheduler.shutdown()
@@ -74,8 +73,8 @@ def start_hp():
     hp.start_hp()
     hp.client.close()
 
-    p = Client('10.208.8.106', 65432)
-    p.send('on')
+    # p = Client('10.208.8.106', 65432)
+    # p.send('on')
 
 
 def stop_hp():
@@ -83,8 +82,8 @@ def stop_hp():
     hp.stop_hp()
     hp.client.close()
 
-    p = Client('10.208.8.106', 65432)
-    p.send('off')
+    # p = Client('10.208.8.106', 65432)
+    # p.send('off')
 
 
 def main():
@@ -104,8 +103,8 @@ def main():
 
 
 if __name__ == '__main__':
-    pass
-    # start_hp()
+    # pass
+    start_hp()
 
     # stop_hp()
     # main()

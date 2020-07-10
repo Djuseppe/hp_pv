@@ -14,6 +14,7 @@ import board
 import busio
 import digitalio
 import adafruit_max31865
+import adafruit_dht as dht_lib
 
 
 # set logger here
@@ -26,8 +27,12 @@ file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
-logger.addHandler(stream_handler)
+# logger.addHandler(file_handler)
+# logger.addHandler(stream_handler)
+if not len(logger.handlers):
+    logger.addHandler(stream_handler)
+    logger.addHandler(file_handler)
+    logger.propagate = False
 
 
 class Device(ABC):
@@ -147,6 +152,46 @@ class TemperatureMeasurementDevice:
         return df.mean().round(2).to_dict()
 
 
+class DHTTemp(Device):
+    def __init__(self, interval=10):
+        self.interval = interval
+        try:
+            self.dhtDevice = dht_lib.DHT22(board.D19)
+        except RuntimeError as error:
+            logger.debug('DHT was not inited: {}'.format(error))
+
+    def measure(self):
+        try:
+            self.dhtDevice.measure()
+            _temp = self.dhtDevice.temperature
+            _hum = self.dhtDevice.humidity
+        except RuntimeError as e:
+            logger.debug('Error while measuring: {}'.format(e))
+            _temp, _hum = np.nan, np.nan
+        temp = _temp if isinstance(_temp, (float, int)) else np.nan
+        hum = _hum if isinstance(_hum, (float, int)) else np.nan
+        return temp, hum
+
+    @Decorators.wait
+    def make_measurement(self):
+        temps = np.zeros(self.interval, dtype=float)
+        hums = np.zeros(self.interval, dtype=float)
+        # time_vals = list()
+        # start_time = datetime.now().strftime(time_format)
+        # print('start_time = {}'.format(start_time))
+        # start = time.time()
+        for i in range(self.interval):
+            temps[i], hums[i] = self.measure()
+            # res[i] = self.measure() if i != 4 else np.nan
+            # time_vals.append(round(time.time() - start_time, 2))
+            # time_vals.append(datetime.now(tz_prague).strftime(time_format))
+            time.sleep(0.9)
+        # stop = time.time()
+        # if stop - start < self.interval:
+        #     time.sleep(self.interval - (stop - start))
+        return temps[~np.isnan(temps)].mean(), hums[~np.isnan(hums)].mean()  # , time_vals[-1]
+
+
 def parse_args():
     """Parse the args from main."""
     parser = argparse.ArgumentParser(
@@ -159,25 +204,18 @@ def parse_args():
     return parser.parse_args()
 
 
-def main(host, port):
-    m = TemperatureMeasurementDevice(
-        writer=InfluxClient(
-            host=host, port=port,
-            user='eugene', password='7vT4g#1@K',
-            dbname='uceeb'
-        )
-    )
-#
-    while True:
-        try:
-            res = m.make_measurement()
-            print(res, end='')
-            m.write_to_db(res)
-        except KeyboardInterrupt:
-            print('Interrupted by user.')
-            break
+def dht_meas():
+
+    dht = DHTTemp(5)
+    try:
+        while True:
+            t, h = dht.make_measurement()
+            print(f'temp = {t:.1f}, \t hum = {h:.1f}')
+    except KeyboardInterrupt:
+        logger.info('Script was interrupted by user.')
+        pass
 
 
 if __name__ == '__main__':
     args = parse_args()
-    main(host=args.host, port=args.port)
+    dht_meas()
