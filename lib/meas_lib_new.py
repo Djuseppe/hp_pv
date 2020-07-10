@@ -136,12 +136,12 @@ class TemperatureMeasurementDevice:
 
     @Decorators.wait
     def make_measurement(self):
-        time_vals = list()
+        # time_vals = list()
         df = pd.DataFrame(
             np.zeros(shape=(self.interval, len(self.thermocouple_list)), dtype=float),
             columns=self.therm_names, index=range(self.interval))
         for i, (ind, _) in zip(range(self.interval), df.iterrows()):
-            time_vals.append(datetime.now(self.tz_prague).strftime(self.time_format))
+            # time_vals.append(datetime.now(self.tz_prague).strftime(self.time_format))
             df.loc[ind, :] = self.measure()
             time.sleep(0.9)
         return df.mean().round(2).to_dict()
