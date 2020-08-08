@@ -154,14 +154,14 @@ class TemperatureMeasurementDevice:
 
 class DHTTemp(Device):
     def __init__(
-            self, interval=10, writer=None,
+            self, interval=10, writer=None, board_ch=board.D19,
             time_format='%Y.%m.%d %H:%M:%S.%z', tz_prague=pytz.timezone('Europe/Prague')):
         self.interval = interval
         self.writer = writer
         self.time_format = time_format
         self.tz_prague = tz_prague
         try:
-            self.dhtDevice = dht_lib.DHT22(board.D19)
+            self.dhtDevice = dht_lib.DHT22(board_ch)
         except RuntimeError as error:
             logger.debug('DHT was not initialized: {}'.format(error))
 
