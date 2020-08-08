@@ -14,7 +14,7 @@ import board
 import busio
 import digitalio
 import adafruit_max31865
-import adafruit_dht as dht_lib
+# import adafruit_dht as dht_lib
 
 
 # set logger here
@@ -152,56 +152,111 @@ class TemperatureMeasurementDevice:
         return df.mean().round(2).to_dict()
 
 
-class DHTTemp(Device):
+class TempMeasMAX31865:
     def __init__(
-            self, interval=10, writer=None, board_ch=board.D19,
+            self, interval=10, writer=None, input_list=None,
             time_format='%Y.%m.%d %H:%M:%S.%z', tz_prague=pytz.timezone('Europe/Prague')):
-        self.interval = interval
         self.writer = writer
+        self.interval = interval
         self.time_format = time_format
         self.tz_prague = tz_prague
-        try:
-            self.dhtDevice = dht_lib.DHT22(board_ch)
-        except RuntimeError as error:
-            logger.debug('DHT was not initialized: {}'.format(error))
+        self.spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
+
+        # create a thermocouple object with the above
+        self.input_list = input_list if input_list is not None else [board.D16]
+        self.therm_names = list()
+        self.thermocouple_list = list()
+        for i, input_num in enumerate(self.input_list):
+            self.thermocouple_list.append(adafruit_max31865.MAX31865(
+                self.spi, digitalio.DigitalInOut(input_num), wires=4)
+            )
+            self.therm_names.append(f'sensor_{i}')
 
     def measure(self):
-        try:
-            self.dhtDevice.measure()
-            _temp = self.dhtDevice.temperature
-            _hum = self.dhtDevice.humidity
-        except RuntimeError as e:
-            # logger.debug('Error while measuring: {}'.format(e))
-            _temp, _hum = np.nan, np.nan
-        temp = _temp if isinstance(_temp, (float, int)) else np.nan
-        hum = _hum if isinstance(_hum, (float, int)) else np.nan
-        return temp, hum
-
-    @Decorators.wait
-    def make_measurement(self):
-        df = pd.DataFrame(
-            np.zeros((self.interval, 1), dtype=float),
-            columns=['amb_temp'], index=range(self.interval))
-        for i, (ind, _) in zip(range(self.interval), df.iterrows()):
-            df.loc[ind, :], _ = self.measure()
-            time.sleep(0.9)
-        return df.mean().round(2).to_dict()
+        result = list()
+        for therm in self.thermocouple_list:
+            result.append(therm.temperature)
+        return np.array(result)
 
     def write_to_db(self, data=None):
         tags_dict = {
-            'project': "hp_pv",
-            'type': "hp",
-            'device': "rpi42"
+            'project': "sol",
+            'type': "pv",
+            'device': "rpi_sol"
         }
         try:
             self.writer.write(
                 datetime.now(self.tz_prague).strftime(self.time_format),
                 tags_dict,
-                'amb_temp',
+                'temperatures',
                 **data
             )
         except (ConnectionError, InfluxDBServerError) as e:
             logger.error('{}'.format(e))
+
+    @Decorators.wait
+    def make_measurement(self):
+        # time_vals = list()
+        df = pd.DataFrame(
+            np.zeros(shape=(self.interval, len(self.thermocouple_list)), dtype=float),
+            columns=self.therm_names, index=range(self.interval))
+        for i, (ind, _) in zip(range(self.interval), df.iterrows()):
+            # time_vals.append(datetime.now(self.tz_prague).strftime(self.time_format))
+            df.loc[ind, :] = self.measure()
+            time.sleep(0.9)
+        return df.mean().round(2).to_dict()
+
+
+# class DHTTemp(Device):
+#     def __init__(
+#             self, interval=10, writer=None, board_ch=board.D19,
+#             time_format='%Y.%m.%d %H:%M:%S.%z', tz_prague=pytz.timezone('Europe/Prague')):
+#         self.interval = interval
+#         self.writer = writer
+#         self.time_format = time_format
+#         self.tz_prague = tz_prague
+#         try:
+#             self.dhtDevice = dht_lib.DHT22(board_ch)
+#         except RuntimeError as error:
+#             logger.debug('DHT was not initialized: {}'.format(error))
+#
+#     def measure(self):
+#         try:
+#             self.dhtDevice.measure()
+#             _temp = self.dhtDevice.temperature
+#             _hum = self.dhtDevice.humidity
+#         except RuntimeError as e:
+#             # logger.debug('Error while measuring: {}'.format(e))
+#             _temp, _hum = np.nan, np.nan
+#         temp = _temp if isinstance(_temp, (float, int)) else np.nan
+#         hum = _hum if isinstance(_hum, (float, int)) else np.nan
+#         return temp, hum
+#
+#     @Decorators.wait
+#     def make_measurement(self):
+#         df = pd.DataFrame(
+#             np.zeros((self.interval, 1), dtype=float),
+#             columns=['amb_temp'], index=range(self.interval))
+#         for i, (ind, _) in zip(range(self.interval), df.iterrows()):
+#             df.loc[ind, :], _ = self.measure()
+#             time.sleep(0.9)
+#         return df.mean().round(2).to_dict()
+#
+#     def write_to_db(self, data=None):
+#         tags_dict = {
+#             'project': "hp_pv",
+#             'type': "hp",
+#             'device': "rpi42"
+#         }
+#         try:
+#             self.writer.write(
+#                 datetime.now(self.tz_prague).strftime(self.time_format),
+#                 tags_dict,
+#                 'amb_temp',
+#                 **data
+#             )
+#         except (ConnectionError, InfluxDBServerError) as e:
+#             logger.error('{}'.format(e))
 
 
 def parse_args():
