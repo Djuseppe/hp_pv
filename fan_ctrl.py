@@ -6,6 +6,8 @@ import argparse
 from lib.relay import Pump as Fan
 from lib.meas_lib_new import parse_args, DHTTemp, Decorators
 # from lib.influx.influx_lib import InfluxClient
+import adafruit_dht as dht_lib
+import board
 
 
 def parse_args():
@@ -40,8 +42,8 @@ class DHTTempModified(DHTTemp):
         return df.mean().round(2).to_dict()
 
 
-def test_temp(host=None, port=None):
-    m = DHTTempModified(board_ch=board.D20)
+def test_temp():
+    m = DHTTempModified(board_ch=board.D5)
 #
     while True:
         try:
@@ -51,6 +53,11 @@ def test_temp(host=None, port=None):
         except KeyboardInterrupt:
             print('Interrupted by user.')
             break
+
+
+def dht_test():
+    dht = dht_lib.DHT22(board.D5)
+    print(dht.temperature)
 
 
 def main(temp_set, hum_set):
@@ -91,9 +98,11 @@ def stop_fan():
 
 
 if __name__ == '__main__':
-    args = parse_args()
-    main(temp_set=args.temp, hum_set=args.hum)
+    # args = parse_args()
+    # main(temp_set=args.temp, hum_set=args.hum)
 
+    # test_temp()
+    dht_test()
     # stop_fan()
 
     # main()

@@ -14,7 +14,7 @@ import board
 import busio
 import digitalio
 import adafruit_max31865
-# import adafruit_dht as dht_lib
+import adafruit_dht as dht_lib
 
 
 # set logger here
@@ -207,56 +207,57 @@ class TempMeasMAX31865:
         return df.mean().round(2).to_dict()
 
 
-# class DHTTemp(Device):
-#     def __init__(
-#             self, interval=10, writer=None, board_ch=board.D19,
-#             time_format='%Y.%m.%d %H:%M:%S.%z', tz_prague=pytz.timezone('Europe/Prague')):
-#         self.interval = interval
-#         self.writer = writer
-#         self.time_format = time_format
-#         self.tz_prague = tz_prague
-#         try:
-#             self.dhtDevice = dht_lib.DHT22(board_ch)
-#         except RuntimeError as error:
-#             logger.debug('DHT was not initialized: {}'.format(error))
-#
-#     def measure(self):
-#         try:
-#             self.dhtDevice.measure()
-#             _temp = self.dhtDevice.temperature
-#             _hum = self.dhtDevice.humidity
-#         except RuntimeError as e:
-#             # logger.debug('Error while measuring: {}'.format(e))
-#             _temp, _hum = np.nan, np.nan
-#         temp = _temp if isinstance(_temp, (float, int)) else np.nan
-#         hum = _hum if isinstance(_hum, (float, int)) else np.nan
-#         return temp, hum
-#
-#     @Decorators.wait
-#     def make_measurement(self):
-#         df = pd.DataFrame(
-#             np.zeros((self.interval, 1), dtype=float),
-#             columns=['amb_temp'], index=range(self.interval))
-#         for i, (ind, _) in zip(range(self.interval), df.iterrows()):
-#             df.loc[ind, :], _ = self.measure()
-#             time.sleep(0.9)
-#         return df.mean().round(2).to_dict()
-#
-#     def write_to_db(self, data=None):
-#         tags_dict = {
-#             'project': "hp_pv",
-#             'type': "hp",
-#             'device': "rpi42"
-#         }
-#         try:
-#             self.writer.write(
-#                 datetime.now(self.tz_prague).strftime(self.time_format),
-#                 tags_dict,
-#                 'amb_temp',
-#                 **data
-#             )
-#         except (ConnectionError, InfluxDBServerError) as e:
-#             logger.error('{}'.format(e))
+class DHTTemp(Device):
+    def __init__(
+            self, interval=10, writer=None, board_ch=board.D5,
+            time_format='%Y.%m.%d %H:%M:%S.%z', tz_prague=pytz.timezone('Europe/Prague')):
+        self.interval = interval
+        self.writer = writer
+        self.time_format = time_format
+        self.tz_prague = tz_prague
+        try:
+            self.dhtDevice = dht_lib.DHT22(board_ch)
+            logger.info('Successfully initialized dht sensor!')
+        except Exception as error:  # RuntimeError
+            logger.error('DHT was not initialized: {}'.format(error))
+
+    def measure(self):
+        try:
+            self.dhtDevice.measure()
+            _temp = self.dhtDevice.temperature
+            _hum = self.dhtDevice.humidity
+        except RuntimeError as e:
+            # logger.debug('Error while measuring: {}'.format(e))
+            _temp, _hum = np.nan, np.nan
+        temp = _temp if isinstance(_temp, (float, int)) else np.nan
+        hum = _hum if isinstance(_hum, (float, int)) else np.nan
+        return temp, hum
+
+    @Decorators.wait
+    def make_measurement(self):
+        df = pd.DataFrame(
+            np.zeros((self.interval, 1), dtype=float),
+            columns=['amb_temp'], index=range(self.interval))
+        for i, (ind, _) in zip(range(self.interval), df.iterrows()):
+            df.loc[ind, :], _ = self.measure()
+            time.sleep(0.9)
+        return df.mean().round(2).to_dict()
+
+    def write_to_db(self, data=None):
+        tags_dict = {
+            'project': "hp_pv",
+            'type': "hp",
+            'device': "rpi42"
+        }
+        try:
+            self.writer.write(
+                datetime.now(self.tz_prague).strftime(self.time_format),
+                tags_dict,
+                'amb_temp',
+                **data
+            )
+        except (ConnectionError, InfluxDBServerError) as e:
+            logger.error('{}'.format(e))
 
 
 def parse_args():
