@@ -20,8 +20,8 @@ import adafruit_dht as dht_lib
 # set logger here
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('in module %(name)s, in func %(funcName)s, '
-                              '%(levelname)-8s: [%(filename)s:%(lineno)d] %(message)s')
+formatter = logging.Formatter("'in module %(name)s, in func %(funcName)s, @ %(asctime)s; %(levelname)s; %(message)s",
+                              "%Y-%m-%d %H:%M:%S.%z")
 file_handler = logging.FileHandler('meas_lib_new.log')
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
@@ -31,7 +31,7 @@ stream_handler.setFormatter(formatter)
 # logger.addHandler(stream_handler)
 if not len(logger.handlers):
     logger.addHandler(stream_handler)
-    logger.addHandler(file_handler)
+    # logger.addHandler(file_handler)
     logger.propagate = False
 
 
@@ -154,7 +154,7 @@ class TemperatureMeasurementDevice:
 
 class TempMeasMAX31865:
     def __init__(
-            self, interval=10, writer=None, input_list=None,
+            self, interval=10, writer=None, input_list=None, therm_names=None,
             time_format='%Y.%m.%d %H:%M:%S.%z', tz_prague=pytz.timezone('Europe/Prague')):
         self.writer = writer
         self.interval = interval
@@ -164,13 +164,14 @@ class TempMeasMAX31865:
 
         # create a thermocouple object with the above
         self.input_list = input_list if input_list is not None else [board.D16]
-        self.therm_names = list()
+        self.therm_names = therm_names if therm_names is not None else list()
         self.thermocouple_list = list()
         for i, input_num in enumerate(self.input_list):
             self.thermocouple_list.append(adafruit_max31865.MAX31865(
                 self.spi, digitalio.DigitalInOut(input_num), wires=4)
             )
-            self.therm_names.append(f'sensor_{i}')
+            if therm_names is None:
+                self.therm_names.append(f'sensor_{i}')
 
     def measure(self):
         result = list()
@@ -274,11 +275,12 @@ def parse_args():
 
 def dht_meas():
 
-    dht = DHTTemp(5)
+    dht = DHTTemp(board_ch=board.D20)
     try:
         while True:
-            t, h = dht.make_measurement()
-            print(f'temp = {t:.1f}, \t hum = {h:.1f}')
+            print(dht.make_measurement())
+            # t, h = dht.make_measurement()
+            # print(f'temp = {t:.1f}, \t hum = {h:.1f}')
     except KeyboardInterrupt:
         logger.info('Script was interrupted by user.')
         pass

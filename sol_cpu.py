@@ -173,8 +173,8 @@ def stop_fan():
 if __name__ == '__main__':
     # args = parse_args()
     # main(temp_set=args.temp, hum_set=args.hum)
-    # run_cpu_fan()
-    # main_hum_fan(args.temp, args.hum)
+    run_cpu_fan()
+    # main_hum_fan()
     # test_temp()
     # dht_test()
     # stop_fan()
@@ -184,5 +184,3 @@ if __name__ == '__main__':
     # fan = Fan(channel=13)  # big fan channel
     # # fan.turn_on()
     # fan.turn_off()
-
-    test_temp()

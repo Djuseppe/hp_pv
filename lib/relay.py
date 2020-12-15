@@ -69,9 +69,12 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    arguments = parse_args()
-    pump = Pump(auto_turn_off=arguments.time)
+    # arguments = parse_args()
+    # pump = Pump(auto_turn_off=arguments.time)
     # pump.gpio_set()
-    pump.turn_off()
+    # pump.turn_off()
     # GPIO.cleanup()
+
+    fan = Pump(13)
+    fan.turn_on()
 
