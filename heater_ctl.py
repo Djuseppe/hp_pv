@@ -14,20 +14,21 @@ formatter = logging.Formatter("'in module %(name)s, in func %(funcName)s, @ %(as
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 
-f_handler = logging.FileHandler('heater_clt.log')
+f_handler = logging.FileHandler('lib/heater_clt.log')
 f_handler.setLevel(logging.DEBUG)
 f_handler.setFormatter(formatter)
 logger.addHandler(f_handler)
 
-if not len(logger.handlers):
-    logger.addHandler(stream_handler)
-    logger.propagate = False
-    # logger.addHandler(f_handler)
-    # logger.propagate = False
+# if not len(logger.handlers):
+logger.addHandler(stream_handler)
+logger.propagate = True
+# logger.addHandler(f_handler)
+# logger.propagate = False
 
 
 class HeatingSystem:
-    def __init__(self, hea_set=45, hyster=5, cool_set=25, thermometer=DHTTemp(board_ch=board.D20),
+    def __init__(self, hea_set=20, hyster=5, cool_set=25,
+                 thermometer=DHTTemp(interval=10, board_ch=board.D20),
                  interval=10, cooler=Relay(19), heater=Relay(13)):
         self.hea_set = hea_set
         self.cool_set = cool_set
@@ -55,12 +56,12 @@ class HeatingSystem:
                 if temp <= self.hea_set:
                     self.heater.turn_on()
                     while temp <= self.hea_set + self.hyster:
-                        logger.info('Current temperature = {:.1f}'.format(temp))
+                        logger.info(f'Heater is running @ temp = {temp:.1f} [C]')
                         temp = self.temp_meas()
                         # time.sleep(1)
                 else:
                     self.stop()
-                    logger.info('Current temperature = {:.1f}'.format(temp))
+                    logger.info(f'Current temperature = {temp:.1f} [C]')
                     time.sleep(1)
                 self.clean()
             except KeyboardInterrupt:

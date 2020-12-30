@@ -1,0 +1,12 @@
+{
+	"influx":
+		{
+			"host": "10.208.8.93",
+			"port": 8086,
+			"user": "eugene",
+			"password": "7vT4g#1@K",
+			"database": "pv",
+			"ssl": true,
+			"verify_ssl": false
+		}
+}
